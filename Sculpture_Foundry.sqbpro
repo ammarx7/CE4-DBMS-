@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="Sculpture_Foundry.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1717"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="foundries" custom_title="0" dock_id="1" table="4,9:mainfoundries"/><dock_state state="000000ff00000000fd00000001000000020000043c000002b6fc0100000001fb000000160064006f0063006b00420072006f007700730065003101000000000000043c0000011800ffffff000002580000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="foundries" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="69"/><column index="2" value="89"/><column index="3" value="87"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- ==========================================
+-- PROJECT: SCULPTURE FOUNDRY &amp; CASTING COST TRACKING
+-- ==========================================
+
+-- Enable Foreign Key Constraints
+PRAGMA foreign_keys = ON;
+
+-- 1. FOUNDRIES TABLE
+CREATE TABLE IF NOT EXISTS foundries (
+    foundry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    foundry_name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    contact_email TEXT NOT NULL
+);
+
+-- 2. SCULPTURE CASTS TABLE
+CREATE TABLE IF NOT EXISTS sculpture_casts (
+    cast_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    foundry_id INTEGER NOT NULL,
+    sculpture_title TEXT NOT NULL,
+    casting_date TEXT NOT NULL,
+
+    FOREIGN KEY (foundry_id)
+    REFERENCES foundries(foundry_id)
+    ON DELETE CASCADE
+);
+
+-- 3. MATERIAL COSTS TABLE
+CREATE TABLE IF NOT EXISTS material_costs (
+    cost_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cast_id INTEGER NOT NULL,
+    material_description TEXT NOT NULL,
+    cost_amount REAL NOT NULL CHECK (cost_amount &gt;= 0),
+
+    FOREIGN KEY (cast_id)
+    REFERENCES sculpture_casts(cast_id)
+    ON DELETE CASCADE
+);</sql><sql name="SQL 2*">-- INSERT SAMPLE FOUNDRIES
+
+INSERT INTO foundries
+(foundry_name, contact_email)
+VALUES
+('Chola Bronze Works', 'chola@example.com'),
+('Heritage Art Foundry', 'heritage@example.com'),
+('Deccan Sculpture Studio', 'deccan@example.com'),
+('Lotus Metal Arts', 'lotus@example.com');
+
+
+-- INSERT SCULPTURE CASTS
+
+INSERT INTO sculpture_casts
+(foundry_id, sculpture_title, casting_date)
+VALUES
+(1, 'Dancing Nataraja', '2026-10-12'),
+(1, 'Temple Guardian', '2026-10-18'),
+(2, 'Reclining Buddha', '2026-10-20'),
+(3, 'The Meditating Sage', '2026-10-25'),
+(4, 'River Goddess', '2026-11-02');
+
+
+-- INSERT MATERIAL COSTS
+
+INSERT INTO material_costs
+(cast_id, material_description, cost_amount)
+VALUES
+(1, 'Bronze Ingot (kg)', 18500),
+(1, 'Patina Chemicals', 3200),
+(2, 'Mould Making', 7500),
+(3, 'Bronze Ingot (kg)', 24000),
+(3, 'Finishing and Polishing', 4600),
+(4, 'Mould Making', 6800),
+(5, 'Patina Chemicals', 2900);</sql><sql name="SQL 3*">SELECT
+    sc.cast_id,
+    f.foundry_name,
+    sc.sculpture_title,
+    sc.casting_date,
+    mc.material_description,
+    mc.cost_amount
+FROM foundries f
+INNER JOIN sculpture_casts sc
+    ON f.foundry_id = sc.foundry_id
+INNER JOIN material_costs mc
+    ON sc.cast_id = mc.cast_id
+ORDER BY sc.cast_id;</sql><sql name="SQL 4*">-- ==========================================
+-- SQL 4: DELETE AND ROLLBACK
+-- ==========================================
+
+PRAGMA foreign_keys = ON;
+
+-- Delete one foundry
+DELETE FROM foundries
+WHERE foundry_id = 1;
+
+-- Check remaining sculpture casts
+SELECT * FROM sculpture_casts;
+
+-- Check remaining material costs
+SELECT * FROM material_costs;
+
+-- Restore deleted records
+ROLLBACK;
+
+-- Verify restored foundries
+SELECT * FROM foundries;
+
+-- Verify restored sculpture casts
+SELECT * FROM sculpture_casts;
+
+-- Verify restored material costs
+SELECT * FROM material_costs;</sql><current_tab id="3"/></tab_sql></sqlb_project>
